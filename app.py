@@ -95,11 +95,67 @@ elif page == "Log Expense":
             st.warning("Please fill in item name and cost.")
 
 # --- PAGE: DASHBOARD ---
+# --- PAGE: DASHBOARD ---
 elif page == "Dashboard":
     st.header("📊 Profit Dashboard")
     
     if st.button("Refresh Data"):
-        st.cache_data.clear() # Clears cache to force reload
+        st.cache_data.clear()
+    
+    # Fetch Data with error handling
+    try:
+        data_s = ws_sales.get_all_records()
+        df_s = pd.DataFrame(data_s)
+        
+        data_e = ws_expenses.get_all_records()
+        df_e = pd.DataFrame(data_e)
+    except:
+        st.error("Could not fetch data. Please check your internet.")
+        st.stop()
+    
+    # Date Filtering (Current Month)
+    current_month = datetime.now().strftime("%Y-%m")
+    
+    # SALES CALCULATION (Safe Mode)
+    sales_total = 0
+    if not df_s.empty and 'Date' in df_s.columns:
+        df_s['Date'] = df_s['Date'].astype(str)
+        # Filter for this month
+        mask = df_s['Date'].str.contains(current_month, na=False)
+        sales_total = df_s[mask]['Total'].sum()
+
+    # EXPENSE CALCULATION (Safe Mode)
+    exp_total = 0
+    if not df_e.empty and 'Date' in df_e.columns:
+        df_e['Date'] = df_e['Date'].astype(str)
+        mask = df_e['Date'].str.contains(current_month, na=False)
+        exp_total = df_e[mask]['Cost'].sum()
+        
+    net = sales_total - exp_total
+    
+    # Scorecard
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Sales (Month)", f"P{sales_total:,.2f}")
+    col2.metric("Expenses (Month)", f"P{exp_total:,.2f}")
+    col3.metric("Net Profit", f"P{net:,.2f}", delta_color="normal")
+    
+    st.divider()
+    
+    # Last 5 Transactions
+    c1, c2 = st.columns(2)
+    with c1:
+        st.subheader("Last 5 Sales")
+        if not df_s.empty and 'Date' in df_s.columns:
+            st.dataframe(df_s[['Date', 'Item', 'Total']].tail(5).iloc[::-1], hide_index=True)
+        else:
+            st.info("No sales yet.")
+            
+    with c2:
+        st.subheader("Last 5 Expenses")
+        if not df_e.empty and 'Date' in df_e.columns:
+            st.dataframe(df_e[['Date', 'Item', 'Cost']].tail(5).iloc[::-1], hide_index=True)
+        else:
+            st.info("No expenses yet.")
     
     # Fetch Data
     df_s = pd.DataFrame(ws_sales.get_all_records())
@@ -141,3 +197,4 @@ elif page == "Dashboard":
         if not df_e.empty:
 
             st.dataframe(df_e[['Date', 'Item', 'Cost']].tail(5).iloc[::-1], hide_index=True)
+
