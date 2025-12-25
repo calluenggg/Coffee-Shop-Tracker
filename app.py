@@ -9,8 +9,8 @@ st.set_page_config(page_title="Cafe POS", page_icon="☕")
 
 # --- 1. MENU SETTINGS (Edit this anytime!) ---
 MENU = {
-    "Espresso": 120, "Americano": 120, "Latte": 150, "Cappuccino": 150,
-    "Spanish Latte": 170, "Cold Brew": 160, "Pourover": 180, "Cookie": 80
+    "Americano": 60, "Latte": 80, "Caramel Latte": 90, "Brown Sugar Latte": 90,
+    "Spanish Latte": 100, "Matcha Latte": 100, "Houjicha Latte": 100,
 }
 
 # --- 2. CONNECT TO GOOGLE SHEETS ---
@@ -139,4 +139,5 @@ elif page == "Dashboard":
     with c2:
         st.subheader("Last 5 Expenses")
         if not df_e.empty:
+
             st.dataframe(df_e[['Date', 'Item', 'Cost']].tail(5).iloc[::-1], hide_index=True)
